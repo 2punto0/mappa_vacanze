@@ -1,0 +1,8 @@
+
+#map {
+  height: 100vh;
+  width: 100%;
+}
+.leaflet-marker-icon {
+  transition: transform 0.2s ease;
+}
