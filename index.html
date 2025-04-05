@@ -21,20 +21,22 @@
           const marker = L.marker([item.lat, item.lon])
             .addTo(map)
             .bindPopup("<b>" + item.name + "</b><br><a href='" + item.link + "' target='_blank'>Vai all'annuncio</a>");
-          
+
           marker.on('mouseover', function () {
-            this._icon.style.transform = 'scale(1.5)';
+            this._icon.classList.add('marker-hover');
           });
 
           marker.on('mouseout', function () {
-            this._icon.style.transform = 'scale(1)';
+            this._icon.classList.remove('marker-hover');
           });
 
           markers.push(marker);
         });
 
-        const group = L.featureGroup(markers);
-        map.fitBounds(group.getBounds().pad(0.2));
+        if (markers.length > 0) {
+          const group = L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.2));
+        }
       });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
