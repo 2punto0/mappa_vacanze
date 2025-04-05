@@ -1,62 +1,20 @@
 [
   {
-    "name": "Appartamento moderno vicino al centro - Sappada",
+    "name": "Appartamento 1 - Sappada",
     "link": "https://www.airbnb.it/rooms/13323355",
-    "lat": 46.5695,
-    "lon": 12.6921
+    "lat": 46.5715,
+    "lon": 12.6911
   },
   {
-    "name": "Chalet tradizionale - Sappada",
+    "name": "Chalet Tradizionale - Sappada",
     "link": "https://www.airbnb.it/rooms/4682311",
-    "lat": 46.571,
-    "lon": 12.6932
+    "lat": 46.5689,
+    "lon": 12.6907
   },
   {
-    "name": "Casa di montagna Dal Renzo - Passo del Tonale",
+    "name": "Casa di Montagna - Passo del Tonale",
     "link": "https://www.airbnb.it/rooms/841998866587411701",
-    "lat": 46.257,
-    "lon": 10.583
-  },
-  {
-    "name": "Accesso diretto piste sci Marilleva 1400 - Tonale",
-    "link": "https://www.airbnb.it/rooms/1205721822966487259",
-    "lat": 46.258,
-    "lon": 10.581
-  },
-  {
-    "name": "Chalet con vista panoramica - Madonna di Campiglio",
-    "link": "https://www.airbnb.it/rooms/1055651229273670632",
-    "lat": 46.228,
-    "lon": 10.7625
-  },
-  {
-    "name": "Appartamento vicino cabinovia - Campiglio",
-    "link": "https://www.airbnb.it/rooms/16822283",
-    "lat": 46.229,
-    "lon": 10.764
-  },
-  {
-    "name": "Casa vacanza con giardino - Sappada",
-    "link": "https://www.airbnb.it/rooms/1194666344452809354",
-    "lat": 46.5701,
-    "lon": 12.695
-  },
-  {
-    "name": "Appartamento vista piste - Tonale",
-    "link": "https://www.airbnb.it/rooms/1333945919407576182",
-    "lat": 46.256,
-    "lon": 10.582
-  },
-  {
-    "name": "Casa famiglia con balcone - Sappada",
-    "link": "https://www.airbnb.it/rooms/887468895458567042",
-    "lat": 46.572,
-    "lon": 12.69
-  },
-  {
-    "name": "Chalet tradizionale (duplicato) - Sappada",
-    "link": "https://www.airbnb.it/rooms/4682311",
-    "lat": 46.571,
-    "lon": 12.6932
+    "lat": 46.255,
+    "lon": 10.5833
   }
 ]
