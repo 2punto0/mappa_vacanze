@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mappa Vacanza Montagna</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map');
+    const markers = [];
+
+    fetch('data/locations.json')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(item => {
+          const marker = L.marker([item.lat, item.lon])
+            .addTo(map)
+            .bindPopup('<b>' + item.name + '</b><br><a href="' + item.link + '" target="_blank">Vai all'annuncio</a>');
+
+          marker.on('mouseover', function () {
+            this._icon.style.transform = 'scale(1.5)';
+          });
+
+          marker.on('mouseout', function () {
+            this._icon.style.transform = 'scale(1)';
+          });
+
+          markers.push(marker);
+        });
+
+        const group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.2));
+      });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+  </script>
+</body>
+</html>
