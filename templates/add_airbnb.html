@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Airbnb - Italian Alps Family Vacation Planner</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    
+    <!-- Leaflet CSS for the location picker map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .map-container {
+            grid-column: span 2;
+            height: 300px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+        
+        #location-map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            grid-column: span 2;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-cancel {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #e5e5e5;
+        }
+        
+        .btn-submit {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        .flash {
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .coordinates-display {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group.full-width, .action-buttons, .map-container {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-home"></i> Add New Airbnb Apartment</h1>
+        
+        <!-- Flash Messages -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <form method="post" action="{{ url_for('add_airbnb') }}">
+            <div class="form-group full-width">
+                <label for="name">Apartment Name*</label>
+                <input type="text" id="name" name="name" required placeholder="e.g., Cozy Apartment in Madonna di Campiglio">
+            </div>
+            
+            <div class="form-group">
+                <label for="price">Price per Night (€)</label>
+                <input type="number" id="price" name="price" placeholder="e.g., 120">
+            </div>
+            
+            <div class="form-group">
+                <label for="bedrooms">Number of Bedrooms</label>
+                <input type="number" id="bedrooms" name="bedrooms" placeholder="e.g., 2">
+            </div>
+            
+            <div class="form-group full-width">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" placeholder="Describe the apartment, its features, and location..."></textarea>
+            </div>
+            
+            <div class="form-group full-width">
+                <label for="url">Airbnb URL</label>
+                <input type="url" id="url" name="url" placeholder="e.g., https://www.airbnb.com/rooms/12345678">
+            </div>
+            
+            <div class="form-group full-width">
+                <label for="image_url">Image URL</label>
+                <input type="url" id="image_url" name="image_url" placeholder="e.g., https://example.com/apartment-image.jpg">
+            </div>
+            
+            <div class="form-group full-width">
+                <label>Select Location on Map* (click to place a marker)</label>
+                <div class="map-container">
+                    <div id="location-map"></div>
+                </div>
+                <div class="coordinates-display">
+                    Selected coordinates: 
+                    <span id="selected-lat">None</span>, 
+                    <span id="selected-lng">None</span>
+                </div>
+                <input type="hidden" id="lat" name="lat" required>
+                <input type="hidden" id="lng" name="lng" required>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="/" class="btn-cancel">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                </a>
+                <button type="submit" class="btn-submit">Add Apartment</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize map centered on Italian Alps
+            const map = L.map('location-map').setView([46.4, 11.9], 9);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            let marker = null;
+            
+            // Handle map clicks to set marker and capture coordinates
+            map.on('click', function(e) {
+                const lat = e.latlng.lat.toFixed(6);
+                const lng = e.latlng.lng.toFixed(6);
+                
+                // Update hidden input fields
+                document.getElementById('lat').value = lat;
+                document.getElementById('lng').value = lng;
+                
+                // Update displayed coordinates
+                document.getElementById('selected-lat').textContent = lat;
+                document.getElementById('selected-lng').textContent = lng;
+                
+                // Add or move marker
+                if (marker) {
+                    marker.setLatLng(e.latlng);
+                } else {
+                    marker = L.marker(e.latlng).addTo(map);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

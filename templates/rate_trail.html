@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Trail Difficulty - {{ trail.name }}</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <style>
+        .rating-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+        
+        .trail-info {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .trail-name {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .trail-description {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+        
+        .current-rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .current-rating-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+            color: #2c3e50;
+        }
+        
+        .rating-stars {
+            color: #f1c40f;
+        }
+        
+        .rating-count {
+            margin-left: 10px;
+            color: #95a5a6;
+            font-size: 14px;
+        }
+        
+        .rating-explanation {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .rating-system {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .rating-system div {
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        .rating-form {
+            margin-top: 30px;
+        }
+        
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .star-rating input {
+            display: none;
+        }
+        
+        .star-rating label {
+            cursor: pointer;
+            font-size: 30px;
+            color: #ddd;
+            padding: 0 5px;
+        }
+        
+        .star-rating input:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #f1c40f;
+            transition: 0.2s;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+        
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .success-message {
+            background-color: #dff0d8;
+            color: #3c763d;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .previous-ratings {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        .rating-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .rating-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .rating-date {
+            color: #95a5a6;
+            font-size: 14px;
+        }
+        
+        .rating-value {
+            color: #f1c40f;
+        }
+        
+        .rating-comment {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="rating-container">
+        <div class="trail-info">
+            <h1 class="trail-name">{{ trail.name }}</h1>
+            <p class="trail-description">{{ trail.description }}</p>
+            
+            <div class="current-rating">
+                <span class="current-rating-value">{{ trail.difficulty_rating or 'Not rated' }}</span>
+                <div class="rating-stars">
+                    {% set rating_stars = (trail.difficulty_rating|int) if trail.difficulty_rating else 0 %}
+                    {% for i in range(5) %}
+                        {% if i < rating_stars %}
+                            <i class="fas fa-hiking"></i>
+                        {% else %}
+                            <i class="far fa-hiking"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="rating-count">({{ trail.rating_count or 0 }} ratings)</span>
+            </div>
+        </div>
+        
+        <div class="rating-explanation">
+            <strong>Rate this trail's difficulty</strong> to help other families plan their hiking adventures. Your input will help fellow vacationers choose trails appropriate for their skill levels.
+        </div>
+        
+        <div class="rating-system">
+            <div>1 <i class="fas fa-hiking"></i><br>Very Easy</div>
+            <div>2 <i class="fas fa-hiking"></i><br>Easy</div>
+            <div>3 <i class="fas fa-hiking"></i><br>Moderate</div>
+            <div>4 <i class="fas fa-hiking"></i><br>Challenging</div>
+            <div>5 <i class="fas fa-hiking"></i><br>Very Difficult</div>
+        </div>
+        
+        <div class="success-message" id="successMessage">
+            Your rating has been submitted successfully!
+        </div>
+        
+        <form class="rating-form" id="ratingForm">
+            <div class="star-rating">
+                <input type="radio" id="star5" name="rating" value="5" />
+                <label for="star5" title="Very Difficult"><i class="fas fa-hiking"></i></label>
+                
+                <input type="radio" id="star4" name="rating" value="4" />
+                <label for="star4" title="Challenging"><i class="fas fa-hiking"></i></label>
+                
+                <input type="radio" id="star3" name="rating" value="3" />
+                <label for="star3" title="Moderate"><i class="fas fa-hiking"></i></label>
+                
+                <input type="radio" id="star2" name="rating" value="2" />
+                <label for="star2" title="Easy"><i class="fas fa-hiking"></i></label>
+                
+                <input type="radio" id="star1" name="rating" value="1" />
+                <label for="star1" title="Very Easy"><i class="fas fa-hiking"></i></label>
+            </div>
+            
+            <textarea name="comment" placeholder="Share your experience with this trail (optional)"></textarea>
+            
+            <button type="submit" class="submit-btn">Submit Rating</button>
+        </form>
+        
+        <div class="previous-ratings" id="previousRatings">
+            <h3>Previous Ratings</h3>
+            <div id="ratingsContainer">
+                <!-- Ratings will be loaded here -->
+                <p>Loading ratings...</p>
+            </div>
+        </div>
+        
+        <a href="/" class="back-link">Back to Map</a>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ratingForm = document.getElementById('ratingForm');
+            const successMessage = document.getElementById('successMessage');
+            const ratingsContainer = document.getElementById('ratingsContainer');
+            const trailId = {{ trail.id }};
+            
+            // Load existing ratings
+            loadRatings();
+            
+            // Check for existing user identifier in localStorage
+            let userIdentifier = localStorage.getItem(`trail_rating_user_${trailId}`);
+            
+            ratingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(ratingForm);
+                const rating = formData.get('rating');
+                const comment = formData.get('comment');
+                
+                if (!rating) {
+                    alert('Please select a difficulty rating');
+                    return;
+                }
+                
+                const data = {
+                    rating: rating,
+                    comment: comment,
+                    user_identifier: userIdentifier
+                };
+                
+                fetch(`/api/trails/${trailId}/rate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Store user identifier for future ratings
+                        localStorage.setItem(`trail_rating_user_${trailId}`, data.user_identifier);
+                        userIdentifier = data.user_identifier;
+                        
+                        // Update the display
+                        successMessage.style.display = 'block';
+                        ratingForm.reset();
+                        
+                        // Update displayed rating
+                        document.querySelector('.current-rating-value').textContent = data.trail.difficulty_rating;
+                        document.querySelector('.rating-count').textContent = `(${data.trail.rating_count} ratings)`;
+                        
+                        // Reload ratings
+                        loadRatings();
+                        
+                        // Scroll to success message
+                        successMessage.scrollIntoView({ behavior: 'smooth' });
+                        
+                        // Hide success message after 3 seconds
+                        setTimeout(() => {
+                            successMessage.style.display = 'none';
+                        }, 3000);
+                    } else {
+                        alert('Error submitting rating: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error submitting rating. Please try again.');
+                });
+            });
+            
+            function loadRatings() {
+                fetch(`/api/trails/${trailId}/ratings`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ratings && data.ratings.length > 0) {
+                        const ratingsHTML = data.ratings.map(rating => {
+                            const date = new Date(rating.created_at);
+                            const formattedDate = date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            });
+                            
+                            return `
+                                <div class="rating-item">
+                                    <div class="rating-header">
+                                        <div class="rating-date">${formattedDate}</div>
+                                        <div class="rating-value">
+                                            ${'<i class="fas fa-hiking"></i>'.repeat(rating.rating)}
+                                        </div>
+                                    </div>
+                                    ${rating.comment ? `<p class="rating-comment">"${rating.comment}"</p>` : ''}
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        ratingsContainer.innerHTML = ratingsHTML;
+                    } else {
+                        ratingsContainer.innerHTML = '<p>No ratings yet. Be the first to rate this trail!</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    ratingsContainer.innerHTML = '<p>Error loading ratings. Please try again later.</p>';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
