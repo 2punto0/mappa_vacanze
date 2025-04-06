@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trekking API Management - Italian Alps Vacation Planner</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .api-card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+        }
+        
+        .status-connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+        }
+        
+        .log-entry-success {
+            color: #28a745;
+        }
+        
+        .log-entry-error {
+            color: #dc3545;
+        }
+        
+        .log-entry-warning {
+            color: #ffc107;
+        }
+        
+        .refresh-btn {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Trekking API Management</li>
+            </ol>
+        </nav>
+        
+        <h1 class="mb-4">Trekking API Management</h1>
+        
+        <!-- Flash Messages -->
+        <div id="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <!-- API Connection Status -->
+        <div class="card api-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">API Connection Status</h5>
+                <span class="status-badge" id="connection-status">Checking...</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="api-key" class="form-label">API Key</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="api-key" placeholder="Enter your trekking API key" value="{{ api_key or '' }}">
+                        <button class="btn btn-outline-secondary" type="button" id="toggle-api-key">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-primary" type="button" id="save-api-key">Save Key</button>
+                    </div>
+                    <div class="form-text">Your API key is required to connect to the external trekking service.</div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-outline-primary" id="test-connection">Test Connection</button>
+                    <button class="btn btn-success" id="sync-trails">Sync Trails Now</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Settings -->
+        <div class="card api-card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">API Settings</h5>
+            </div>
+            <div class="card-body">
+                <form id="api-settings-form">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="region" class="form-label">Default Region</label>
+                                <select class="form-select" id="region">
+                                    <option value="trentino-alto-adige" selected>Trentino-Alto Adige</option>
+                                    <option value="lombardy">Lombardy</option>
+                                    <option value="veneto">Veneto</option>
+                                    <option value="friuli-venezia-giulia">Friuli-Venezia Giulia</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="trail-limit" class="form-label">Maximum Trails to Import</label>
+                                <input type="number" class="form-control" id="trail-limit" min="1" max="100" value="25">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="auto-sync" checked>
+                        <label class="form-check-label" for="auto-sync">
+                            Enable daily automatic synchronization
+                        </label>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sync History -->
+        <div class="card api-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Synchronization History</h5>
+                <i class="bi bi-arrow-clockwise refresh-btn" id="refresh-history" title="Refresh History"></i>
+            </div>
+            <div class="card-body">
+                <div class="log-container" id="sync-log">
+                    <div class="log-entry log-entry-success">
+                        <strong>2025-04-06 12:30:15</strong> - Successfully imported 8 new trails from API
+                    </div>
+                    <div class="log-entry log-entry-warning">
+                        <strong>2025-04-05 08:15:22</strong> - API rate limit reached, only 5 trails imported
+                    </div>
+                    <div class="log-entry log-entry-error">
+                        <strong>2025-04-04 09:45:10</strong> - Connection failed: API key invalid
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap and jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Check connection status on page load
+            checkConnectionStatus();
+            
+            // Toggle API key visibility
+            $('#toggle-api-key').click(function() {
+                const apiKeyInput = $('#api-key');
+                const type = apiKeyInput.attr('type');
+                
+                if (type === 'password') {
+                    apiKeyInput.attr('type', 'text');
+                    $(this).html('<i class="bi bi-eye-slash"></i>');
+                } else {
+                    apiKeyInput.attr('type', 'password');
+                    $(this).html('<i class="bi bi-eye"></i>');
+                }
+            });
+            
+            // Save API key
+            $('#save-api-key').click(function() {
+                const apiKey = $('#api-key').val();
+                
+                $.ajax({
+                    url: '/api/admin/save-api-key',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ api_key: apiKey }),
+                    success: function(response) {
+                        // Show success message
+                        $('#flash-messages').html(
+                            '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                            'API key saved successfully!' +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                            '</div>'
+                        );
+                        
+                        // Check connection with new key
+                        checkConnectionStatus();
+                    },
+                    error: function(error) {
+                        // Show error message
+                        $('#flash-messages').html(
+                            '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                            'Failed to save API key: ' + (error.responseJSON?.error || 'Unknown error') +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                            '</div>'
+                        );
+                    }
+                });
+            });
+            
+            // Test connection
+            $('#test-connection').click(function() {
+                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Testing...');
+                
+                $.ajax({
+                    url: '/api/admin/test-connection',
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.connected) {
+                            $('#connection-status').removeClass('status-disconnected').addClass('status-connected').text('Connected');
+                            
+                            $('#flash-messages').html(
+                                '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                                'Successfully connected to the trekking API!' +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                                '</div>'
+                            );
+                        } else {
+                            $('#connection-status').removeClass('status-connected').addClass('status-disconnected').text('Disconnected');
+                            
+                            $('#flash-messages').html(
+                                '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                                'Failed to connect to the trekking API: ' + (response.error || 'Unknown error') +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                                '</div>'
+                            );
+                        }
+                    },
+                    error: function(error) {
+                        $('#connection-status').removeClass('status-connected').addClass('status-disconnected').text('Error');
+                        
+                        $('#flash-messages').html(
+                            '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                            'Error testing connection: ' + (error.responseJSON?.error || 'Unknown error') +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                            '</div>'
+                        );
+                    },
+                    complete: function() {
+                        $('#test-connection').prop('disabled', false).text('Test Connection');
+                    }
+                });
+            });
+            
+            // Sync trails
+            $('#sync-trails').click(function() {
+                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Syncing...');
+                
+                $.ajax({
+                    url: '/api/trails/update-from-api',
+                    method: 'POST',
+                    data: JSON.stringify({
+                        region: $('#region').val(),
+                        limit: $('#trail-limit').val()
+                    }),
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#flash-messages').html(
+                                '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                                'Successfully imported ' + response.imported_count + ' new trails!' +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                                '</div>'
+                            );
+                            
+                            // Add new log entry
+                            const now = new Date().toISOString().replace('T', ' ').substr(0, 19);
+                            $('#sync-log').prepend(
+                                '<div class="log-entry log-entry-success">' +
+                                '<strong>' + now + '</strong> - Successfully imported ' + response.imported_count + ' new trails from API' +
+                                '</div>'
+                            );
+                        } else if (response.status === 'no_changes') {
+                            $('#flash-messages').html(
+                                '<div class="alert alert-info alert-dismissible fade show" role="alert">' +
+                                'No new trails were imported.' +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                                '</div>'
+                            );
+                            
+                            // Add new log entry
+                            const now = new Date().toISOString().replace('T', ' ').substr(0, 19);
+                            $('#sync-log').prepend(
+                                '<div class="log-entry">' +
+                                '<strong>' + now + '</strong> - No new trails to import' +
+                                '</div>'
+                            );
+                        } else {
+                            $('#flash-messages').html(
+                                '<div class="alert alert-warning alert-dismissible fade show" role="alert">' +
+                                'Sync completed with status: ' + response.status +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                                '</div>'
+                            );
+                        }
+                    },
+                    error: function(error) {
+                        $('#flash-messages').html(
+                            '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                            'Error syncing trails: ' + (error.responseJSON?.error || 'Unknown error') +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                            '</div>'
+                        );
+                        
+                        // Add new log entry
+                        const now = new Date().toISOString().replace('T', ' ').substr(0, 19);
+                        $('#sync-log').prepend(
+                            '<div class="log-entry log-entry-error">' +
+                            '<strong>' + now + '</strong> - Error: ' + (error.responseJSON?.error || 'Unknown error') +
+                            '</div>'
+                        );
+                    },
+                    complete: function() {
+                        $('#sync-trails').prop('disabled', false).text('Sync Trails Now');
+                    }
+                });
+            });
+            
+            // Save API settings
+            $('#api-settings-form').submit(function(e) {
+                e.preventDefault();
+                
+                const settings = {
+                    region: $('#region').val(),
+                    trail_limit: $('#trail-limit').val(),
+                    auto_sync: $('#auto-sync').is(':checked')
+                };
+                
+                $.ajax({
+                    url: '/api/admin/save-settings',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(settings),
+                    success: function(response) {
+                        $('#flash-messages').html(
+                            '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                            'Settings saved successfully!' +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                            '</div>'
+                        );
+                    },
+                    error: function(error) {
+                        $('#flash-messages').html(
+                            '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                            'Failed to save settings: ' + (error.responseJSON?.error || 'Unknown error') +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                            '</div>'
+                        );
+                    }
+                });
+            });
+            
+            // Refresh history
+            $('#refresh-history').click(function() {
+                loadSyncHistory();
+            });
+            
+            // Helper functions
+            function checkConnectionStatus() {
+                $.ajax({
+                    url: '/api/admin/connection-status',
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.connected) {
+                            $('#connection-status').removeClass('status-disconnected').addClass('status-connected').text('Connected');
+                        } else {
+                            $('#connection-status').removeClass('status-connected').addClass('status-disconnected').text('Disconnected');
+                        }
+                    },
+                    error: function() {
+                        $('#connection-status').removeClass('status-connected').addClass('status-disconnected').text('Error');
+                    }
+                });
+            }
+            
+            function loadSyncHistory() {
+                $.ajax({
+                    url: '/api/admin/sync-history',
+                    method: 'GET',
+                    success: function(response) {
+                        const logContainer = $('#sync-log');
+                        logContainer.empty();
+                        
+                        if (response.history && response.history.length > 0) {
+                            response.history.forEach(function(entry) {
+                                let logClass = 'log-entry';
+                                if (entry.status === 'success') {
+                                    logClass += ' log-entry-success';
+                                } else if (entry.status === 'error') {
+                                    logClass += ' log-entry-error';
+                                } else if (entry.status === 'warning') {
+                                    logClass += ' log-entry-warning';
+                                }
+                                
+                                logContainer.append(
+                                    '<div class="' + logClass + '">' +
+                                    '<strong>' + entry.timestamp + '</strong> - ' + entry.message +
+                                    '</div>'
+                                );
+                            });
+                        } else {
+                            logContainer.html('<div class="log-entry">No synchronization history available</div>');
+                        }
+                    },
+                    error: function() {
+                        $('#sync-log').html('<div class="log-entry log-entry-error">Failed to load synchronization history</div>');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

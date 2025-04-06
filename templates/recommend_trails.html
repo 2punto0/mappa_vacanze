@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trail Recommendations - Italian Alps Family Vacation</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    
+    <style>
+        .recommendation-form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .recommendation-form h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .checkbox-group {
+            margin: 10px 0;
+        }
+        
+        .recommendation-results {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .results-section {
+            margin-bottom: 30px;
+        }
+        
+        .results-section h4 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        .trail-card {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        .trail-card h5 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+        
+        .trail-card p {
+            margin: 5px 0;
+        }
+        
+        .difficulty-indicator {
+            display: inline-block;
+            margin-left: 5px;
+        }
+        
+        .difficulty-1 { color: #2ecc71; } /* Easy */
+        .difficulty-2 { color: #27ae60; } /* Easy-Moderate */
+        .difficulty-3 { color: #f39c12; } /* Moderate */
+        .difficulty-4 { color: #e67e22; } /* Moderate-Difficult */
+        .difficulty-5 { color: #c0392b; } /* Difficult */
+        
+        .distance-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        
+        .show-on-map {
+            display: inline-block;
+            margin-top: 10px;
+            color: #3498db;
+            cursor: pointer;
+        }
+        
+        .show-on-map:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .buttons-row {
+            margin-top: 20px;
+        }
+        
+        .back-to-map {
+            display: inline-block;
+            margin-right: 15px;
+            color: #7f8c8d;
+            text-decoration: none;
+        }
+        
+        .back-to-map i {
+            margin-right: 5px;
+        }
+        
+        .back-to-map:hover {
+            color: #34495e;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <h2>Personalized Trail Recommendations</h2>
+            
+            <p class="intro">
+                Find the perfect hiking trails for your Italian Alps vacation based on your preferences.
+                Whether you're looking for family-friendly walks or challenging hikes, we'll help you discover
+                the best options.
+            </p>
+            
+            <div class="recommendation-form">
+                <h3>Your Preferences</h3>
+                <form id="recommendationForm">
+                    <div class="form-group">
+                        <label for="difficultyLevel">Preferred Difficulty Level:</label>
+                        <select id="difficultyLevel" name="difficultyLevel" class="form-control">
+                            <option value="1">1 - Easy (Suitable for beginners)</option>
+                            <option value="2">2 - Easy-Moderate</option>
+                            <option value="3" selected>3 - Moderate</option>
+                            <option value="4">4 - Moderate-Difficult</option>
+                            <option value="5">5 - Difficult (For experienced hikers)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="airbnbSelection">Starting Point (Optional):</label>
+                        <select id="airbnbSelection" name="airbnbSelection" class="form-control">
+                            <option value="">-- Select your accommodation --</option>
+                            {% for airbnb in airbnbs %}
+                            <option value="{{ airbnb.id }}">{{ airbnb.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small>Select your accommodation to find trails nearby</small>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="familyFriendly" name="familyFriendly">
+                            Show family-friendly trails only
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Find Trails</button>
+                </form>
+            </div>
+            
+            <div id="recommendationResults" class="recommendation-results">
+                <h3>Your Recommended Trails</h3>
+                
+                <!-- Family-friendly section -->
+                <div id="familyFriendlySection" class="results-section" style="display: none;">
+                    <h4>Family-Friendly Trails</h4>
+                    <div id="familyFriendlyTrails"></div>
+                </div>
+                
+                <!-- Difficulty-based section -->
+                <div id="difficultySection" class="results-section">
+                    <h4>Trails Matching Your Skill Level</h4>
+                    <div id="difficultyTrails"></div>
+                </div>
+                
+                <!-- Nearby trails section -->
+                <div id="nearbySection" class="results-section" style="display: none;">
+                    <h4>Trails Near Your Accommodation</h4>
+                    <div id="nearbyTrails"></div>
+                </div>
+                
+                <!-- Popular trails section -->
+                <div id="popularSection" class="results-section">
+                    <h4>Popular Trails</h4>
+                    <div id="popularTrails"></div>
+                </div>
+            </div>
+            
+            <div class="buttons-row">
+                <a href="/" class="back-to-map">
+                    <i class="fas fa-map-marked-alt"></i>
+                    Back to Map
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const recommendationForm = document.getElementById('recommendationForm');
+            const recommendationResults = document.getElementById('recommendationResults');
+            
+            // Handle form submission
+            recommendationForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form values
+                const difficultyLevel = parseInt(document.getElementById('difficultyLevel').value);
+                const airbnbId = document.getElementById('airbnbSelection').value;
+                const familyFriendly = document.getElementById('familyFriendly').checked;
+                
+                // Prepare user preferences
+                const userPreferences = {
+                    difficulty_level: difficultyLevel,
+                    family_friendly: familyFriendly
+                };
+                
+                // Add airbnb_id if selected
+                if (airbnbId) {
+                    userPreferences.airbnb_id = parseInt(airbnbId);
+                }
+                
+                // Make API request
+                fetch('/api/recommend/trails', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userPreferences),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Show results container
+                    recommendationResults.style.display = 'block';
+                    
+                    // Display results by section
+                    displayTrailsByDifficulty(data.recommendations.by_difficulty);
+                    displayPopularTrails(data.recommendations.popular_trails);
+                    
+                    // Display family-friendly trails if requested
+                    const familySection = document.getElementById('familyFriendlySection');
+                    if (familyFriendly && data.recommendations.family_friendly) {
+                        familySection.style.display = 'block';
+                        displayFamilyFriendlyTrails(data.recommendations.family_friendly);
+                    } else {
+                        familySection.style.display = 'none';
+                    }
+                    
+                    // Display nearby trails if an Airbnb was specified
+                    const nearbySection = document.getElementById('nearbySection');
+                    if (airbnbId && data.recommendations.nearby_trails) {
+                        nearbySection.style.display = 'block';
+                        displayNearbyTrails(data.recommendations.nearby_trails);
+                    } else {
+                        nearbySection.style.display = 'none';
+                    }
+                    
+                    // Scroll to results
+                    recommendationResults.scrollIntoView({ behavior: 'smooth' });
+                })
+                .catch(error => {
+                    console.error('Error fetching recommendations:', error);
+                    alert('Failed to get trail recommendations. Please try again.');
+                });
+            });
+            
+            // Function to display trails by difficulty
+            function displayTrailsByDifficulty(trails) {
+                const container = document.getElementById('difficultyTrails');
+                displayTrails(container, trails);
+            }
+            
+            // Function to display family-friendly trails
+            function displayFamilyFriendlyTrails(trails) {
+                const container = document.getElementById('familyFriendlyTrails');
+                displayTrails(container, trails);
+            }
+            
+            // Function to display nearby trails
+            function displayNearbyTrails(nearbyTrails) {
+                const container = document.getElementById('nearbyTrails');
+                container.innerHTML = '';
+                
+                if (nearbyTrails.length === 0) {
+                    container.innerHTML = '<p>No trails found near your accommodation.</p>';
+                    return;
+                }
+                
+                nearbyTrails.forEach(item => {
+                    const trail = item.trail;
+                    const distance = item.distance_km;
+                    
+                    const trailCard = document.createElement('div');
+                    trailCard.className = 'trail-card';
+                    
+                    // Display distance badge
+                    const distanceBadge = document.createElement('span');
+                    distanceBadge.className = 'distance-badge';
+                    distanceBadge.textContent = `${distance} km away`;
+                    trailCard.appendChild(distanceBadge);
+                    
+                    const trailName = document.createElement('h5');
+                    trailName.textContent = trail.name;
+                    trailCard.appendChild(trailName);
+                    
+                    // Add difficulty indicator
+                    if (trail.difficulty_rating) {
+                        const difficultyClass = `difficulty-${Math.round(trail.difficulty_rating)}`;
+                        const difficultyStars = '★'.repeat(Math.round(trail.difficulty_rating));
+                        const difficultyIndicator = document.createElement('span');
+                        difficultyIndicator.className = `difficulty-indicator ${difficultyClass}`;
+                        difficultyIndicator.textContent = difficultyStars;
+                        trailName.appendChild(difficultyIndicator);
+                    }
+                    
+                    if (trail.description) {
+                        const description = document.createElement('p');
+                        description.textContent = trail.description.substring(0, 120) + '...';
+                        trailCard.appendChild(description);
+                    }
+                    
+                    const showOnMap = document.createElement('a');
+                    showOnMap.className = 'show-on-map';
+                    showOnMap.href = `/?focus=trail-${trail.id}`;
+                    showOnMap.textContent = 'Show on map';
+                    trailCard.appendChild(showOnMap);
+                    
+                    container.appendChild(trailCard);
+                });
+            }
+            
+            // Function to display popular trails
+            function displayPopularTrails(trails) {
+                const container = document.getElementById('popularTrails');
+                displayTrails(container, trails);
+            }
+            
+            // Generic function to display trail cards
+            function displayTrails(container, trails) {
+                container.innerHTML = '';
+                
+                if (trails.length === 0) {
+                    container.innerHTML = '<p>No trails found matching these criteria.</p>';
+                    return;
+                }
+                
+                trails.forEach(trail => {
+                    const trailCard = document.createElement('div');
+                    trailCard.className = 'trail-card';
+                    
+                    const trailName = document.createElement('h5');
+                    trailName.textContent = trail.name;
+                    trailCard.appendChild(trailName);
+                    
+                    // Add difficulty indicator
+                    if (trail.difficulty_rating) {
+                        const difficultyClass = `difficulty-${Math.round(trail.difficulty_rating)}`;
+                        const difficultyStars = '★'.repeat(Math.round(trail.difficulty_rating));
+                        const difficultyIndicator = document.createElement('span');
+                        difficultyIndicator.className = `difficulty-indicator ${difficultyClass}`;
+                        difficultyIndicator.textContent = difficultyStars;
+                        trailName.appendChild(difficultyIndicator);
+                    }
+                    
+                    if (trail.description) {
+                        const description = document.createElement('p');
+                        description.textContent = trail.description.substring(0, 120) + '...';
+                        trailCard.appendChild(description);
+                    }
+                    
+                    const showOnMap = document.createElement('a');
+                    showOnMap.className = 'show-on-map';
+                    showOnMap.href = `/?focus=trail-${trail.id}`;
+                    showOnMap.textContent = 'Show on map';
+                    trailCard.appendChild(showOnMap);
+                    
+                    container.appendChild(trailCard);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

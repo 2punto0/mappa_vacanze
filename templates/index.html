@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Italian Alps Family Vacation Planner</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Italian Alps Family Vacation</h2>
+            
+            <h3>Accommodations</h3>
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="airbnbs">
+                    <span class="layer-icon"><i class="fas fa-home"></i></span>
+                    Airbnb Apartments
+                </label>
+            </div>
+            <div class="add-airbnb">
+                <a href="/airbnbs" class="add-airbnb-link">
+                    <i class="fas fa-list"></i>
+                    View All Airbnbs
+                </a>
+                <br>
+                <a href="/add-airbnb" class="add-airbnb-link">
+                    <i class="fas fa-plus-circle"></i>
+                    Add New Airbnb
+                </a>
+            </div>
+            
+            <div class="feature-links">
+                <a href="/recommend-trails" class="feature-link">
+                    <i class="fas fa-compass"></i>
+                    Find Recommended Trails
+                </a>
+                <a href="/enrich-trails" class="feature-link">
+                    <i class="fas fa-file-alt"></i>
+                    Enrich Trail Data
+                </a>
+            </div>
+            
+            <div class="admin-links">
+                <a href="/admin/trekking-api" class="admin-link">
+                    <i class="fas fa-cog"></i>
+                    Trekking API Settings
+                </a>
+            </div>
+            
+            <h3>Points of Interest</h3>
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="huts">
+                    <span class="layer-icon"><i class="fas fa-mountain"></i></span>
+                    Mountain Huts (Rifugi)
+                </label>
+            </div>
+            
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="trails">
+                    <span class="layer-icon"><i class="fas fa-hiking"></i></span>
+                    Family Hiking Trails
+                </label>
+            </div>
+            
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="cableCars">
+                    <span class="layer-icon"><i class="fas fa-tram"></i></span>
+                    Cable Cars / Chairlifts
+                </label>
+            </div>
+            
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="playgrounds">
+                    <span class="layer-icon"><i class="fas fa-child"></i></span>
+                    Playgrounds / Kids Areas
+                </label>
+            </div>
+            
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="adventureParks">
+                    <span class="layer-icon"><i class="fas fa-tree"></i></span>
+                    Adventure Parks
+                </label>
+            </div>
+            
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="bikeRentals">
+                    <span class="layer-icon"><i class="fas fa-bicycle"></i></span>
+                    Bike/E-Bike Rentals
+                </label>
+            </div>
+            
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="restaurants">
+                    <span class="layer-icon"><i class="fas fa-utensils"></i></span>
+                    Restaurants / Malghe
+                </label>
+            </div>
+            
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="nature">
+                    <span class="layer-icon"><i class="fas fa-binoculars"></i></span>
+                    Lakes and Waterfalls
+                </label>
+            </div>
+            
+            <div class="layer-toggle">
+                <label>
+                    <input type="checkbox" checked data-layer="museums">
+                    <span class="layer-icon"><i class="fas fa-landmark"></i></span>
+                    Museums for Children
+                </label>
+            </div>
+            
+            <button id="reset-view" class="reset-btn">
+                <i class="fas fa-sync-alt"></i> Reset View
+            </button>
+        </div>
+        
+        <!-- Map Container -->
+        <div id="map"></div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+</body>
+</html>

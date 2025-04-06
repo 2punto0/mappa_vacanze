@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbnb Listings - Italian Alps Vacation Map</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #FF5A5F;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .airbnb-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .airbnb-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .airbnb-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .airbnb-image {
+            height: 200px;
+            background-color: #eee;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .no-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #aaa;
+            font-size: 24px;
+        }
+        
+        .price-tag {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background-color: #FF5A5F;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .airbnb-details {
+            padding: 15px;
+        }
+        
+        .airbnb-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #484848;
+        }
+        
+        .airbnb-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #767676;
+        }
+        
+        .airbnb-info i {
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .airbnb-description {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #484848;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .airbnb-link {
+            display: inline-block;
+            color: #FF5A5F;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .airbnb-link:hover {
+            text-decoration: underline;
+        }
+        
+        .view-on-map {
+            display: inline-block;
+            background-color: #ff5a5f;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        .view-on-map:hover {
+            background-color: #ff4448;
+        }
+        
+        .filters {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-label {
+            font-weight: bold;
+            color: #484848;
+            margin-right: 5px;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #767676;
+        }
+        
+        .add-airbnb-button {
+            background-color: #FF5A5F;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .add-airbnb-button:hover {
+            background-color: #ff4448;
+        }
+        
+        @media (max-width: 768px) {
+            .airbnb-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .nav-links {
+                margin-top: 15px;
+            }
+            
+            .nav-links a {
+                margin: 0 10px;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+            
+            select, input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Airbnb Listings - Italian Alps Vacation</h1>
+            <div class="nav-links">
+                <a href="/"><i class="fas fa-map-marked-alt"></i> Return to Map</a>
+                <a href="/add-airbnb"><i class="fas fa-plus-circle"></i> Add New Listing</a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Bedrooms:</span>
+                <select id="bedrooms-filter">
+                    <option value="all">All</option>
+                    <option value="1">1 Bedroom</option>
+                    <option value="2">2 Bedrooms</option>
+                    <option value="3">3 Bedrooms</option>
+                    <option value="4+">4+ Bedrooms</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <span class="filter-label">Price:</span>
+                <select id="price-filter">
+                    <option value="all">All</option>
+                    <option value="0-100">Under €100</option>
+                    <option value="100-200">€100 - €200</option>
+                    <option value="200-300">€200 - €300</option>
+                    <option value="300+">Over €300</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <span class="filter-label">Sort By:</span>
+                <select id="sort-filter">
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="bedrooms-asc">Bedrooms: Low to High</option>
+                    <option value="bedrooms-desc">Bedrooms: High to Low</option>
+                </select>
+            </div>
+            
+            <a href="/add-airbnb" class="add-airbnb-button">
+                <i class="fas fa-plus"></i> Add New Listing
+            </a>
+        </div>
+        
+        <div class="airbnb-grid">
+            {% for airbnb in airbnbs %}
+            <div class="airbnb-card" data-bedrooms="{{ airbnb.bedrooms or 0 }}" data-price="{{ airbnb.price or 0 }}">
+                <div class="airbnb-image" {% if airbnb.image_url %}style="background-image: url('{{ airbnb.image_url }}');"{% endif %}>
+                    {% if not airbnb.image_url %}
+                    <div class="no-image">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if airbnb.price %}
+                    <div class="price-tag">
+                        €{{ airbnb.price }}/night
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="airbnb-details">
+                    <div class="airbnb-name">{{ airbnb.name }}</div>
+                    
+                    <div class="airbnb-info">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Coordinates: {{ airbnb.lat|round(4) }}, {{ airbnb.lng|round(4) }}</span>
+                    </div>
+                    
+                    {% if airbnb.bedrooms %}
+                    <div class="airbnb-info">
+                        <i class="fas fa-bed"></i>
+                        <span>{{ airbnb.bedrooms }} Bedroom{% if airbnb.bedrooms != 1 %}s{% endif %}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if airbnb.description %}
+                    <div class="airbnb-description">
+                        {{ airbnb.description }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="airbnb-actions">
+                        {% if airbnb.url %}
+                        <a href="{{ airbnb.url }}" target="_blank" class="airbnb-link">
+                            <i class="fas fa-external-link-alt"></i> Search Similar Listings in This Area
+                        </a>
+                        {% endif %}
+                        
+                        <a href="/?focus=airbnb&id={{ airbnb.id }}" class="view-on-map">
+                            <i class="fas fa-map-pin"></i> View on Map
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-results">
+                <p>No Airbnb listings found. <a href="/add-airbnb">Add one now</a>!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <script>
+        // Filtering functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const bedroomsFilter = document.getElementById('bedrooms-filter');
+            const priceFilter = document.getElementById('price-filter');
+            const sortFilter = document.getElementById('sort-filter');
+            const cards = document.querySelectorAll('.airbnb-card');
+            
+            function applyFilters() {
+                const bedroomValue = bedroomsFilter.value;
+                const priceValue = priceFilter.value;
+                const sortValue = sortFilter.value;
+                
+                // Filter cards
+                cards.forEach(card => {
+                    let show = true;
+                    const bedrooms = parseInt(card.dataset.bedrooms) || 0;
+                    const price = parseInt(card.dataset.price) || 0;
+                    
+                    // Apply bedroom filter
+                    if (bedroomValue !== 'all') {
+                        if (bedroomValue === '4+') {
+                            if (bedrooms < 4) show = false;
+                        } else {
+                            if (bedrooms != parseInt(bedroomValue)) show = false;
+                        }
+                    }
+                    
+                    // Apply price filter
+                    if (priceValue !== 'all' && show) {
+                        if (priceValue === '0-100') {
+                            if (price > 100 || price === 0) show = false;
+                        } else if (priceValue === '100-200') {
+                            if (price < 100 || price > 200) show = false;
+                        } else if (priceValue === '200-300') {
+                            if (price < 200 || price > 300) show = false;
+                        } else if (priceValue === '300+') {
+                            if (price < 300) show = false;
+                        }
+                    }
+                    
+                    card.style.display = show ? '' : 'none';
+                });
+                
+                // Convert NodeList to array for sorting
+                const cardsArray = Array.from(cards).filter(card => card.style.display !== 'none');
+                
+                // Sort cards
+                cardsArray.sort((a, b) => {
+                    const aBedrooms = parseInt(a.dataset.bedrooms) || 0;
+                    const bBedrooms = parseInt(b.dataset.bedrooms) || 0;
+                    const aPrice = parseInt(a.dataset.price) || 0;
+                    const bPrice = parseInt(b.dataset.price) || 0;
+                    
+                    if (sortValue === 'price-asc') {
+                        if (aPrice === 0) return 1; // Put items with no price at the end
+                        if (bPrice === 0) return -1;
+                        return aPrice - bPrice;
+                    } else if (sortValue === 'price-desc') {
+                        if (aPrice === 0) return 1;
+                        if (bPrice === 0) return -1;
+                        return bPrice - aPrice;
+                    } else if (sortValue === 'bedrooms-asc') {
+                        return aBedrooms - bBedrooms;
+                    } else if (sortValue === 'bedrooms-desc') {
+                        return bBedrooms - aBedrooms;
+                    }
+                });
+                
+                // Re-add sorted elements
+                const grid = document.querySelector('.airbnb-grid');
+                cardsArray.forEach(card => grid.appendChild(card));
+                
+                // Show no results message
+                const visibleCards = document.querySelectorAll('.airbnb-card[style=""]').length + 
+                                    document.querySelectorAll('.airbnb-card:not([style])').length;
+                
+                let noResults = document.querySelector('.no-results');
+                if (visibleCards === 0 && !noResults) {
+                    noResults = document.createElement('div');
+                    noResults.className = 'no-results';
+                    noResults.innerHTML = '<p>No listings match your filters. Try adjusting your criteria.</p>';
+                    grid.appendChild(noResults);
+                } else if (visibleCards > 0 && noResults) {
+                    noResults.remove();
+                }
+            }
+            
+            // Add event listeners
+            bedroomsFilter.addEventListener('change', applyFilters);
+            priceFilter.addEventListener('change', applyFilters);
+            sortFilter.addEventListener('change', applyFilters);
+            
+            // Initial sort
+            applyFilters();
+        });
+    </script>
+</body>
+</html>

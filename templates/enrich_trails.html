@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enrich Trail Data - Italian Alps Vacation Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .trail-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .trail-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .trail-url {
+            font-size: 14px;
+            color: #3498db;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+        
+        .trail-description {
+            font-size: 15px;
+            line-height: 1.5;
+            margin-top: 10px;
+            border-left: 3px solid #27ae60;
+            padding-left: 15px;
+            color: #555;
+        }
+        
+        .trail-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .trail-action-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #e8f8f0;
+            color: #27ae60;
+            border: 1px solid #d0f0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .trail-action-btn:hover {
+            background-color: #d0f0e0;
+            transform: translateY(-2px);
+        }
+        
+        .enrichment-stats {
+            background-color: #edf7fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .enrichment-history {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-mountain"></i> Italian Alps Vacation Planner</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}"><i class="fas fa-map"></i> Interactive Map</a></li>
+                <li><a href="{{ url_for('airbnb_list') }}"><i class="fas fa-home"></i> Airbnb Listings</a></li>
+                <li><a href="{{ url_for('recommend_trails_page') }}"><i class="fas fa-compass"></i> Recommend Trails</a></li>
+                <li class="active"><a href="{{ url_for('enrich_trails_page') }}"><i class="fas fa-file-alt"></i> Enrich Trail Data</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="container">
+            <h2><i class="fas fa-file-alt"></i> Enrich Trail Descriptions</h2>
+            <p class="intro">This tool helps improve trail descriptions by fetching content from official trail websites. The system analyzes the content and extracts the most relevant information about each trail.</p>
+            
+            {% if stats %}
+            <div class="enrichment-stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.total }}</div>
+                    <div class="stat-label">Total Trails</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.with_descriptions }}</div>
+                    <div class="stat-label">With Descriptions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.needs_descriptions }}</div>
+                    <div class="stat-label">Need Improvement</div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="form-section">
+                <form action="{{ url_for('enrich_trails_page') }}" method="post">
+                    <div class="form-group">
+                        <label for="limit">Number of trails to process:</label>
+                        <select name="limit" id="limit">
+                            <option value="1">1 trail</option>
+                            <option value="3" selected>3 trails</option>
+                            <option value="5">5 trails</option>
+                            <option value="10">10 trails</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn"><i class="fas fa-sync-alt"></i> Enrich Trail Data</button>
+                </form>
+            </div>
+            
+            {% if result %}
+            <div class="result-section">
+                <h3>Enrichment Results</h3>
+                <p>Processed: {{ result.processed }} trails</p>
+                <p>Successfully enriched: {{ result.enriched }} trails</p>
+                <p>Remaining trails to process: {{ result.remaining }}</p>
+            </div>
+            {% endif %}
+            
+            {% if trails %}
+            <div class="enrichment-history">
+                <h3>Trails Without Proper Descriptions</h3>
+                
+                {% for trail in trails %}
+                <div class="trail-card">
+                    <div class="trail-name">{{ trail.name }}</div>
+                    {% if trail.url %}
+                    <div class="trail-url">
+                        <a href="{{ trail.url }}" target="_blank">{{ trail.url }}</a>
+                    </div>
+                    {% else %}
+                    <div class="trail-url">No URL available</div>
+                    {% endif %}
+                    
+                    {% if trail.description %}
+                    <div class="trail-description">
+                        {{ trail.description }}
+                    </div>
+                    {% else %}
+                    <div class="trail-description">
+                        No description available
+                    </div>
+                    {% endif %}
+                    
+                    <div class="trail-actions">
+                        <form action="{{ url_for('enrich_single_trail', trail_id=trail.id) }}" method="post">
+                            <button type="submit" class="trail-action-btn">
+                                <i class="fas fa-sync-alt"></i> Enrich This Trail
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Italian Alps Vacation Planner</p>
+            <div class="admin-links">
+                <a href="{{ url_for('admin_trekking_api') }}" class="admin-link"><i class="fas fa-cog"></i> Trekking API Settings</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
