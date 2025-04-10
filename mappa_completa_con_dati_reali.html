@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Mappa Completa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>body { margin: 0; display: flex; font-family: Arial, sans-serif; }#sidebar { width: 300px; height: 100vh; overflow-y: auto; background: #f8f9fa; padding: 10px; border-right: 1px solid #ddd; }#map { flex: 1; height: 100vh; } .layer-group { margin-bottom: 20px; }ul { padding-left: 20px; margin: 0; } li { margin-bottom: 4px; font-size: 14px; }</style>
+</head>
+<body>
+<div id="sidebar"><h2>Filtra la Mappa</h2>
+<div class="layer-group"><h3><input type="checkbox" id="strutture" checked> Strutture</h3><ul id="list-strutture"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="rifugi" checked> Rifugi</h3><ul id="list-rifugi"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="sentieri" checked> Sentieri</h3><ul id="list-sentieri"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="cabinovie" checked> Cabinovie</h3><ul id="list-cabinovie"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="giochi" checked> Giochi</h3><ul id="list-giochi"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="parchi_avventura" checked> Parchi Avventura</h3><ul id="list-parchi_avventura"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="noleggi_bici" checked> Noleggi Bici</h3><ul id="list-noleggi_bici"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="ristoranti" checked> Ristoranti</h3><ul id="list-ristoranti"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="cascate_laghi" checked> Cascate Laghi</h3><ul id="list-cascate_laghi"></ul></div>
+<div class="layer-group"><h3><input type="checkbox" id="musei" checked> Musei</h3><ul id="list-musei"></ul></div>
+<a class="reset-btn" href="#" onclick="resetView()">Reset Vista</a></div>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map = L.map('map').setView([46.4, 11.9], 10);
+const defaultView = [46.4, 11.9], defaultZoom = 10;
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(map);
+function resetView() { map.setView(defaultView, defaultZoom); }
+const icons = {
+strutture: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/194/194933.png', iconSize: [35, 35] }),
+rifugi: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [25, 25] }),
+sentieri: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [25, 25] }),
+cabinovie: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684927.png', iconSize: [25, 25] }),
+giochi: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/747/747376.png', iconSize: [25, 25] }),
+parchi_avventura: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1046/1046866.png', iconSize: [30, 30] }),
+noleggi_bici: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png', iconSize: [30, 30] }),
+ristoranti: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png', iconSize: [30, 30] }),
+cascate_laghi: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854878.png', iconSize: [30, 30] }),
+musei: L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1046/1046853.png', iconSize: [30, 30] })
+};
+const dati = {
+  strutture: [
+    { nome: "Appartamento moderno", lat: 46.5717, lon: 12.6894, url: "https://www.airbnb.it/rooms/13323355" },
+    { nome: "Chalet tradizionale", lat: 46.5745, lon: 12.6872, url: "https://www.airbnb.it/rooms/4682311" },
+    { nome: "Casa Dal Renzo", lat: 46.3161, lon: 10.7514, url: "https://www.airbnb.it/rooms/841998866587411701" },
+    { nome: "Marilleva 1400", lat: 46.3190, lon: 10.7580, url: "https://www.airbnb.it/rooms/1205721822966487259" },
+    { nome: "Chalet panoramico", lat: 46.2306, lon: 10.8327, url: "https://www.airbnb.it/rooms/1055651229273670632" },
+    { nome: "Appartamento centro", lat: 46.2280, lon: 10.8320, url: "https://www.airbnb.it/rooms/16822283" },
+    { nome: "Casa Marmolada", lat: 46.4483, lon: 11.8702, url: "https://www.airbnb.it/rooms/1194666344452809354" },
+    { nome: "Appartamento vista Dolomiti", lat: 46.4520, lon: 11.8750, url: "https://www.airbnb.it/rooms/1252111786187853131" },
+    { nome: "Panoramico Dolomiti", lat: 46.4550, lon: 11.8720, url: "https://www.airbnb.it/rooms/1333945919407576182" },
+    { nome: "Alloggio Val di Sole", lat: 46.3250, lon: 10.7540, url: "https://www.airbnb.it/rooms/887468895458567042" }
+  ],
+  rifugi: [
+    { nome: "Rifugio Nambino", lat: 46.2156, lon: 10.8166 },
+    { nome: "Rifugio Denza", lat: 46.3114, lon: 10.6511 },
+    { nome: "Rifugio Castiglioni Marmolada", lat: 46.4586, lon: 11.8668 },
+    { nome: "Rifugio Sappada 2000", lat: 46.5764, lon: 12.6863 }
+  ],
+  sentieri: [
+    { nome: "Sentiero Lago Nambino (Komoot)", lat: 46.2171, lon: 10.8193, url: "https://www.komoot.com/it-it/tour/1542109607" },
+    { nome: "Passeggiata Marilleva", lat: 46.3374, lon: 10.7541 },
+    { nome: "Viel del Pan", lat: 46.4965, lon: 11.8130 },
+    { nome: "Lungopiave Sappada (Wikiloc)", lat: 46.5634, lon: 12.6911, url: "https://www.wikiloc.com/hiking-trails/sappada-lungo-piave-24303165" }
+  ],
+  cabinovie: [
+    { nome: "Cabinovia Grostè", lat: 46.2333, lon: 10.8256 },
+    { nome: "Cabinovia Paradiso", lat: 46.2573, lon: 10.5884 },
+    { nome: "Funivia Marmolada", lat: 46.4486, lon: 11.8661 },
+    { nome: "Seggiovia Monte Siera", lat: 46.5746, lon: 12.6853 }
+  ],
+  giochi: [
+    { nome: "Parco Sarca", lat: 46.2321, lon: 10.8364 },
+    { nome: "Fantaski Tonale", lat: 46.2558, lon: 10.5857 },
+    { nome: "Area giochi Marmolada", lat: 46.4524, lon: 11.8735 },
+    { nome: "Nevelandia", lat: 46.5735, lon: 12.6860 }
+  ],
+  parchi_avventura: [
+    { nome: "Flying Park Malè", lat: 46.3464, lon: 10.9092, url: "https://www.iltrentinodeibambini.it/flying-park/" },
+    { nome: "Adventure Dolomiti", lat: 46.2614, lon: 11.3794, url: "https://www.adventuredolomiti.it/" }
+  ],
+  noleggi_bici: [
+    { nome: "Noleggio Ebike Madonna di Campiglio", lat: 46.2278, lon: 10.8325 },
+    { nome: "Sport Mairhof Sappada", lat: 46.5690, lon: 12.6944 }
+  ],
+  ristoranti: [
+    { nome: "Rifugio Fuciade", lat: 46.3718, lon: 11.7876 },
+    { nome: "Malga Ritorto", lat: 46.2117, lon: 10.8234 }
+  ],
+  cascate_laghi: [
+    { nome: "Cascata Nardis", lat: 46.1656, lon: 10.7271 },
+    { nome: "Lago di Fedaia", lat: 46.4647, lon: 11.8597 }
+  ],
+  musei: [
+    { nome: "MUSE Trento", lat: 46.0636, lon: 11.1215 },
+    { nome: "Museo Ladino Fassa", lat: 46.4298, lon: 11.6849 }
+  ]
+}; const layerGroups = {};
+for (const cat in dati) {
+ layerGroups[cat] = L.layerGroup(); dati[cat].forEach(p => {
+const popup = `<b>${p.nome}</b><br>${p.url ? `<a href='${p.url}' target='_blank'>Apri link</a>` : ''}`;
+const marker = L.marker([p.lat, p.lon], { icon: icons[cat] }).bindPopup(popup);
+marker.addTo(layerGroups[cat]);
+const ul = document.getElementById(`list-${cat}`);
+if (ul) { const li = document.createElement('li'); li.innerHTML = `<a href='#' onclick='map.setView([${p.lat}, ${p.lon}], 13)'>${p.nome}</a>`; ul.appendChild(li); }
+});
+layerGroups[cat].addTo(map);
+const cb = document.getElementById(cat);
+if (cb) { cb.addEventListener('change', e => { if (e.target.checked) { layerGroups[cat].addTo(map); } else { map.removeLayer(layerGroups[cat]); } }); }
+}
+</script></body></html>
